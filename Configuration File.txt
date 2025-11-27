@@ -1,0 +1,415 @@
+------ R1 ------ 
+<Change Hostname>
+enable
+configure terminal
+hostname R1
+
+<Create Password Encrypted for Privileged EXEC Mode>
+enable secret cisco123
+
+<Secure Console port>
+line console 0
+login local
+exit
+
+<Configure Domain Name, Username and Password for SSH>
+ip domain-name nti.com
+username admin secret 123
+crypto key generate rsa 
+<write> modulus: 1024
+
+<Activate 16 virtual ports, secure them and enable SSH>
+line vty 0 15
+login local
+transport input ssh
+exit
+
+<Encrypt all passwords>
+service password-encryption
+
+<Warning Message>
+banner motd # Unauthorized access is prohibited. R1#
+
+<Disable DNS lookup for unrecognized commands>
+no ip domain-lookup
+end
+
+<Activate IPv6>
+configure terminal
+ipv6 unicast-routing
+
+<Activate S0/1/0>
+interface S0/1/0
+ip address 172.16.10.1 255.255.255.252
+ipv6 address 2001:db8:1:40::1/64
+no shutdown
+exit
+
+<Activate G0/0/0>
+enable
+configure terminal
+interface G0/0/0
+ip address 172.16.10.33 255.255.255.224
+ipv6 address 2001:db8:1:10::1/64
+no shutdown
+exit
+
+----Configure OSPFv2 (IPv4)-----
+enable
+configure terminal
+router ospf 1
+router-id 1.1.1.1
+passive-interface G0/0/0
+network 172.16.10.32 0.0.0.31 area 0
+network 172.16.10.0 0.0.0.3 area 0
+exit
+
+----Configure DHCP-----
+<DHCP excluded configuration>
+ip dhcp excluded-address 172.16.10.33 172.16.10.33
+ip dhcp excluded-address 172.16.10.34 172.16.10.34
+
+<DHCP Pool Configuration>
+ip dhcp pool SOC-Department
+network 172.16.10.32 255.255.255.224
+default-router 172.16.10.33
+exit
+
+----Configure OSPFv3 (IPv6)-----
+enable
+configure terminal
+router ospf 2
+interface S0/1/0
+ipv6 ospf 2 area 0
+exit
+interface G0/0/0
+ipv6 ospf 2 area 0
+exit
+
+----OSPF MD5 Authentication----
+router ospf 1
+area 0 authentication message-digest
+exit
+router ospf 2
+area 0 authentication message-digest
+exit
+interface S0/1/0
+ip ospf message-digest-key 1 md5 cisco123
+ip ospf authentication message-digest
+exit
+
+
+wr or copy running-config startup-config
+_____________________
+------ R2 ------ 
+<Change Hostname>
+enable
+configure terminal
+hostname R2
+
+<Create Password Encrypted for Privileged EXEC Mode>
+enable secret cisco123
+
+<Secure Console port>
+line console 0
+login local
+exit
+
+<Configure Domain Name, Username and Password for SSH>
+ip domain-name nti.com
+username admin secret 123
+crypto key generate rsa 
+<write> modulus: 1024
+
+<Activate 16 virtual ports, secure them and enable SSH>
+line vty 0 15
+login local
+transport input ssh
+exit
+
+<Encrypt all passwords>
+service password-encryption
+
+<Warning Message>
+banner motd # Unauthorized access is prohibited. R2#
+
+<Disable DNS lookup for unrecognized commands>
+no ip domain-lookup
+end
+
+<Activate IPv6>
+configure terminal
+ipv6 unicast-routing
+
+<Activate S0/1/0>
+enable
+configure terminal
+interface S0/1/0
+ip address 172.16.10.2 255.255.255.252
+ipv6 address 2001:db8:1:40::2/64
+no shutdown
+exit
+
+<Activate G0/0/1>
+enable
+configure terminal
+interface G0/0/1
+ip address 172.16.10.6 255.255.255.252
+ipv6 address 2001:db8:1:50::2/64
+no shutdown
+exit
+
+<Activate loopback0>
+enable
+configure terminal
+interface loopback 0
+ip address 172.16.10.65 255.255.255.224
+ipv6 address 2001:db8:1:20::1/64
+no shutdown
+exit
+
+<Static route>
+ip route 0.0.0.0 0.0.0.0 loopback0
+ipv6 route ::/0 loopback0
+
+----Configure OSPFv2 (IPv4)-----
+router ospf 1
+router-id 2.2.2.2
+network 172.16.10.0 0.0.0.3 area 0
+network 172.16.10.4 0.0.0.3 area 0
+
+<Default Route>
+default-information originate 				<Publish your default route for all routers on OSPF 1>
+
+----Configure OSPFv3 (IPv6)-----
+enable
+configure terminal
+router ospf 2
+default-information originate				<Publish your IPv6 default route>
+interface S0/1/0
+ipv6 ospf 2 area 0
+exit
+interface G0/0/1
+ipv6 ospf 2 area 0
+exit
+
+----OSPF MD5 Authentication----
+router ospf 1
+area 0 authentication message-digest
+exit
+router ospf 2
+area 0 authentication message-digest
+exit
+interface S0/1/0
+ip ospf message-digest-key 1 md5 cisco123
+ip ospf authentication message-digest
+exit
+interface G0/0/1
+ip ospf message-digest-key 1 md5 cisco123	
+ip ospf authentication message-digest
+exit
+
+wr or copy running-config startup-config
+_____________________
+------ R3 ------ 
+<Change Hostname>
+enable
+configure terminal
+hostname R3
+
+<Create Password Encrypted for Privileged EXEC Mode>
+enable secret cisco123
+
+<Secure Console port>
+line console 0
+login local
+exit
+
+<Configure Domain Name, Username and Password for SSH>
+ip domain-name nti.com
+username admin secret 123
+crypto key generate rsa 
+<write> modulus: 1024
+
+<Activate 16 virtual ports, secure them and enable SSH>
+line vty 0 15
+login local
+transport input ssh
+exit
+
+<Encrypt all passwords>
+service password-encryption
+
+<Warning Message>
+banner motd # Unauthorized access is prohibited. R3#
+
+<Disable DNS lookup for unrecognized commands>
+no ip domain-lookup
+end
+
+<Activate IPv6>
+configure terminal
+ipv6 unicast-routing
+
+<Activate G0/0/0>
+enable
+configure terminal
+interface G0/0/0
+ip address 172.16.10.5 255.255.255.252
+ipv6 address 2001:db8:1:50::1/64
+no shutdown
+exit
+
+<Activate G0/0/1>
+enable
+configure terminal
+interface G0/0/1
+ip address 172.16.10.97 255.255.255.224
+ipv6 address 2001:db8:1:30::1/64
+no shutdown
+exit
+
+----Configure OSPFv2 (IPv4)-----
+router ospf 1
+router-id 3.3.3.3
+passive-interface G0/0/1
+network 172.16.10.4 0.0.0.3 area 0
+network 172.16.10.96 0.0.0.31 area 0
+exit
+
+----Configure DHCP-----
+<DHCP excluded configuration>
+ip dhcp excluded-address 172.16.10.97 172.16.10.97
+ip dhcp excluded-address 172.16.10.98 172.16.10.98
+
+<DHCP Pool Configuration>
+ip dhcp pool IT-Department
+network 172.16.10.96 255.255.255.224
+default-router 172.16.10.97
+end
+
+----Configure OSPFv3 (IPv6)-----
+enable
+configure terminal
+router ospf 2
+interface G0/0/0
+ipv6 ospf 2 area 0
+exit
+interface G0/0/1
+ipv6 ospf 2 area 0
+exit
+
+----OSPF MD5 Authentication----
+router ospf 1
+area 0 authentication message-digest
+exit
+router ospf 2
+area 0 authentication message-digest
+exit
+interface G0/0/0
+ip ospf message-digest-key 1 md5 cisco123
+ip ospf authentication message-digest
+exit
+
+
+wr or copy running-config startup-config
+_____________________
+---S1---
+<Change Hostname>
+enable
+configure terminal
+hostname S1
+
+<Create Password Encrypted for Privileged EXEC Mode>
+enable secret cisco123
+
+<Secure Console port>
+line console 0
+login local
+exit
+
+<Configure Domain Name, Username and Password for SSH>
+ip domain-name nti.com
+username admin secret 123
+crypto key generate rsa 
+<write> modulus: 1024
+
+<Activate 15 virtual ports, secure them and enable SSH>
+line vty 0 15
+login local
+transport input ssh
+exit
+
+<Encrypt all passwords>
+service password-encryption
+
+<Warning Message>
+banner motd # Unauthorized access is prohibited. S1#
+
+<Disable DNS lookup for unrecognized commands>
+no ip domain-lookup
+end
+
+<VLAN Configuration SVI>
+enable
+configure terminal
+interface VLAN1
+ip address 172.16.10.34 255.255.255.224
+no shutdown
+exit
+
+<Configuer Default-Gateway>
+ip default-gateway 172.16.10.33
+end
+
+wr or copy running-config startup-config
+_____________________
+---S2---
+<Change Hostname>
+enable
+configure terminal
+hostname S2
+
+<Create Password Encrypted for Privileged EXEC Mode>
+enable secret cisco123
+
+<Secure Console port>
+line console 0
+login local
+exit
+
+<Configure Domain Name, Username and Password for SSH>
+ip domain-name nti.com
+username admin secret 123
+crypto key generate rsa 
+<write> modulus: 1024
+
+<Activate 15 virtual ports, secure them and enable SSH>
+line vty 0 15
+login local
+transport input ssh
+exit
+
+<Encrypt all passwords>
+service password-encryption
+
+<Warning Message>
+banner motd # Unauthorized access is prohibited. S2#
+
+<Disable DNS lookup for unrecognized commands>
+no ip domain-lookup
+end
+
+<VLAN Configuration SVI>
+enable
+configure terminal
+interface VLAN1
+ip address 172.16.10.98 255.255.255.224
+no shutdown
+exit
+
+<Configuer Default-Gateway>
+ip default-gateway 172.16.10.97
+end
+
+wr or copy running-config startup-config
